@@ -53,15 +53,22 @@
 //
 
 /* Defines and variables */
-#define FILE_HIGHWATER 1536
-#define JPEG_FILE_BUF_SIZE 2048
+// #define FILE_HIGHWATER 1536
+// #define JPEG_FILE_BUF_SIZE 2048
+// ---- Trying out larger chucnk sizes because the ESP32 has more SRAM than the original library targetted with the tiny memory Cortex-M0 devices
+#define FILE_HIGHWATER 6144      // 8192 - 2048
+#define JPEG_FILE_BUF_SIZE 8192  // 8KB read chunks
 #define HUFF_TABLEN  273
 #define HUFF11SIZE (1<<11)
 #define DC_TABLE_SIZE 1024
 #define DCTSIZE 64
+//#define MAX_MCU_COUNT 6
+//#define MAX_COMPS_IN_SCAN 4
+//#define MAX_BUFFERED_PIXELS 2048
+// ---- Trying out a larger buffered pixel width in memory than the original library - again because we have more SRAM available to us
 #define MAX_MCU_COUNT 6
 #define MAX_COMPS_IN_SCAN 4
-#define MAX_BUFFERED_PIXELS 2048
+#define MAX_BUFFERED_PIXELS 8192 // Groups more pixels per LCD callback
 #define MCU_SKIP -8
 
 // Decoder options

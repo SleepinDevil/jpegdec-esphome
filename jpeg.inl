@@ -4688,6 +4688,44 @@ static void JPEGPutMCU12(JPEGIMAGE *pJPEG, int x, int iPitch)
         return;
     }
 // full size
+// Adding in this section to process 4:2:2 JPEG more efficiently as well
+#ifdef ESP32S3_SIMD
+    /*
+	if (x + 8 <= iPitch && (iPitch & 15) == 0) { // only for non-clipped MCUs
+        if (pJPEG->ucPixelType == RGB8888) iPitch *= 2;
+        for (iRow=0; iRow<8; iRow++) { 
+            // The top row uses Y[0..7] and Cb/Cr[0..7]
+            s3_ycbcr_convert_444(pY, pCb, pCr, pOutput, i16_Consts, pJPEG->ucPixelType);
+            
+            // The bottom row uses the NEXT Y row, but the EXACT SAME Cb/Cr row (Vertical subsampling!)
+            s3_ycbcr_convert_444(pY+8, pCb, pCr, pOutput+iPitch, i16_Consts, pJPEG->ucPixelType);
+            
+            pY += 16;
+            if (iRow == 3) // next Y MCU block
+                pY += 64; 
+            pCb += 8;
+            pCr += 8;
+            pOutput += iPitch*2;
+        }
+        return;
+    }
+	*/
+	if (x + 16 <= iPitch && (iPitch & 15) == 0) { // only for non-clipped MCUs
+        if (pJPEG->ucPixelType == RGB8888) iPitch *= 2;
+        for (iRow=0; iRow<8; iRow++) { 
+            // s3_ycbcr_convert_420 natively processes 16 pixels (8 left + 8 right Y pixels) 
+            // paired with 8 Cb and 8 Cr pixels. This perfectly matches 4:2:2 horizontal!
+            s3_ycbcr_convert_420(pY, pCb, pCr, pOutput, i16_Consts, pJPEG->ucPixelType);
+            
+            pY += 8;
+            pCb += 8;
+            pCr += 8;
+            pOutput += iPitch;
+        }
+        return;
+    }
+#endif // ESP32S3_SIMD
+
     /* Convert YCC pixels into RGB pixels and store in output image */
     iYCount = 16;
     iXCount = 8;
